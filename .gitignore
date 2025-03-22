@@ -1,0 +1,22 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Environment Variables
+.env
+.env.local
+
+#Logs
+logs/
+*.log
+
+# Build and cache files
+dist/
+build/
+.cache/
+.vscode/
+.DS_Store
+.idea/
+*.swp
