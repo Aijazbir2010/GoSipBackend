@@ -120,7 +120,7 @@ router.post('/login', async (req, res) => {
 })
 
 // Refresh Access Token
-router.get('refresh', (req, res) => {
+router.get('/refresh', (req, res) => {
     const { refreshToken } = req.cookies
 
     if (!refreshToken) {

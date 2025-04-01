@@ -4,8 +4,6 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
-import User from './models/User.js'
-
 import UserRouter from './routes/user.js'
 import VerificationCodeRouter from './routes/verificationcode.js'
 
@@ -24,10 +22,6 @@ app.use('/user', UserRouter)
 app.use('/verificationcode', VerificationCodeRouter)
 
 mongoose.connect(MONGO_URI)
-
-app.get('/', async (req, res) => {
-    res.send('Hello World !')
-})
 
 app.listen(PORT, () => {
     console.log(`Server Listening On Port ${PORT}`)

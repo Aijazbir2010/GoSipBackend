@@ -12,11 +12,6 @@ const generateGoSipID = () => {
     return `GS-${randomHex().toUpperCase()}-${randomHex().toUpperCase()}`
 }
 
-const generateName = () => {
-    const randomHex = () => Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0")
-    return `User${randomHex().toUpperCase()}`
-}
-
 const UserSchema = new mongoose.Schema({
     name: {type: String},
     GoSipID: {type: String, unique: true},
@@ -39,10 +34,6 @@ UserSchema.pre('save', async function (next) {
 
     if (!this.color) {
         this.color = COLORS[Math.floor(Math.random() * COLORS.length)]
-    }
-
-    if (!this.name) {
-        this.name = generateName()
     }
 
     next()
