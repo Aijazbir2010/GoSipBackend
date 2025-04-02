@@ -2,9 +2,9 @@ import { Router } from "express";
 import dotenv from 'dotenv'
 import User from "../models/User.js";
 import VerificationCode from "../models/VerificationCode.js";
+import { verifyAuth } from "../middleware/verifyAuth.js";
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import req from "express/lib/request.js";
 
 const router = Router()
 
@@ -56,15 +56,15 @@ router.post('/register', async (req, res) => {
     
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60 * 1000
         })
     
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
     
@@ -100,15 +100,15 @@ router.post('/login', async (req, res) => {
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60 * 1000
         })
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
@@ -121,6 +121,7 @@ router.post('/login', async (req, res) => {
 
 // Refresh Access Token
 router.get('/refresh', (req, res) => {
+
     const { refreshToken } = req.cookies
 
     if (!refreshToken) {
@@ -128,7 +129,7 @@ router.get('/refresh', (req, res) => {
     }
 
     jwt.verify(refreshToken, JWT_REFRESH_SECRET, (error, decoded) => {
-        if (!error) {
+        if (error) {
             return res.status(403).json({ error: 'Invalid Refresh Token !' })
         }
 
@@ -136,8 +137,8 @@ router.get('/refresh', (req, res) => {
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60 * 1000
         })
 
@@ -150,17 +151,30 @@ router.get('/logout', (req, res) => {
 
     res.clearCookie('accessToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'strict'
+        secure: true,
+        sameSite: 'none'
     })
 
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'strict'
+        secure: true,
+        sameSite: 'none'
     })
 
     return res.json({ success: true })
+})
+
+// Get User Data
+router.get('/getuser', verifyAuth, async (req, res) => {
+    const { GoSipID } = req.user
+
+    const user = await User.findOne({ GoSipID })
+
+    if (!user) {
+        return res.status(404).json({ error: 'User Not Found !' })
+    }
+
+    return res.json({ user, success: true })
 })
 
 export default router
