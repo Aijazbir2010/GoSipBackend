@@ -164,6 +164,57 @@ router.get('/logout', (req, res) => {
     return res.json({ success: true })
 })
 
+// Get User E-mail (For Sending E-mail To Reset Password)
+router.post('/getemail', async (req, res) => {
+    const { identifier } = req.body
+
+    if (!identifier) {
+        return res.status(400).json({ error: 'Identifier is required !' })
+    }
+
+    const user = await User.findOne({ $or: [{ email: identifier }, { GoSipID: identifier }] })
+
+    if (!user) {
+        return res.status(404).json({ message: 'No User Found !' })
+    }
+
+    const email = user.email
+
+    return res.json({ email, success: true })
+})
+
+// Reset Password
+router.post('/resetpassword', async (req, res) => {
+    const { email, code, password } = req.body
+
+    if (!email || !code || !password) {
+        return res.status(400).json({ error: 'All fields are required !' })
+    }
+
+    try {
+
+        const verificationCode = await VerificationCode.findOne({ email })
+    
+        if (!verificationCode) {
+            return res.status(403).json({ error: 'Verification Code Expired !' })
+        }
+    
+        if (verificationCode.code !== code.toUpperCase()) {
+            return res.status(400).json({ error: 'Invalid Verification Code !' })
+        }
+    
+        const hashedPassword = await bcrypt.hash(password, 10)
+    
+        await User.updateOne({ email }, { password: hashedPassword })
+
+        return res.json({ success: true })
+        
+    } catch (error) {
+        return res.status(500).json({ error: 'Cannot Reset Password ! Server Error !' })
+    }
+
+})
+
 // Get User Data
 router.get('/getuser', verifyAuth, async (req, res) => {
     const { GoSipID } = req.user

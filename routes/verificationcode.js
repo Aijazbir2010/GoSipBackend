@@ -20,10 +20,10 @@ const transporter = nodemailer.createTransport({
 
 // Send Verification Code
 router.post('/send', async (req, res) => {
-    const { email } = req.body
+    const { email, register } = req.body // Whether to send code for registering or reset password
 
-    if (!email) {
-        return res.status(400).json({ error: 'E-mail is required !' })
+    if (!email || !register) {
+        return res.status(400).json({ error: 'All fields are required !' })
     }
 
     const code = generateCode()
@@ -32,7 +32,7 @@ router.post('/send', async (req, res) => {
         const mailOptions = {
             from: process.env.EMAIL,
             to: email,
-            subject: 'Verification Code',
+            subject: register === 'true' ? 'Verification Code' : 'Password Reset Code',
             html: `<!DOCTYPE html>
 <html>
 
@@ -74,7 +74,7 @@ router.post('/send', async (req, res) => {
 
                     <tr>
                         <td align="center" style="padding: 20px 0 10px;">
-                            <h2 style="margin: 0; color: #1B2021; font-size: 36px;">You're Almost There !</h2>
+                            <h2 style="margin: 0; color: #1B2021; font-size: 36px;">${register === 'true' ? "You're Almost There !" : 'Password Reset Code'}</h2>
                         </td>
                     </tr>
 
@@ -82,8 +82,7 @@ router.post('/send', async (req, res) => {
                         <td align="center" style="padding: 0 30px;">
                             <p
                                 style="color: #1B2021; font-size: 14px; line-height: 1.5; margin: 0 0 30px; text-align: center;">
-                                Only one step left to become a Member of GoSip. Please enter this verification code
-                                in the register form.
+                                ${register === 'true' ? 'Only one step left to become a Member of GoSip. Please enter this verification code in the register form.' : 'Please enter this verification code in the reset password form to reset your password.'}
                             </p>
                         </td>
                     </tr>
