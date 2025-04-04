@@ -1,15 +1,37 @@
 import { Router } from "express";
-import dotenv from 'dotenv'
+import dotenv from "dotenv";
 import User from "../models/User.js";
 import VerificationCode from "../models/VerificationCode.js";
 import { verifyAuth } from "../middleware/verifyAuth.js";
-import jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
+import jwt from "jsonwebtoken";
+import bcrypt from 'bcrypt';
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = Router()
 
 dotenv.config({ path: '.env.local' })
 
+// For Uploading Profile Pic
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
+// Configure Multer with Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "GoSip",
+        allowedFormats: ['jpg', 'png', 'jpeg'],
+    },
+})
+
+const upload = multer({ storage })
+
+// JWT (Json Web Token)
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
 
@@ -147,7 +169,7 @@ router.get('/refresh', (req, res) => {
 })
 
 // Logout User
-router.get('/logout', (req, res) => {
+router.get('/logout', (_, res) => {
 
     res.clearCookie('accessToken', {
         httpOnly: true,
@@ -226,6 +248,36 @@ router.get('/getuser', verifyAuth, async (req, res) => {
     }
 
     return res.json({ user, success: true })
+})
+
+// Change User's Name
+router.post('/changename', verifyAuth, async (req, res) => {
+    const { GoSipID } = req.user
+    const { name } = req.body
+
+    const user = await User.findOne({ GoSipID })
+
+    if (!user) {
+        return res.status(404).json({ error: 'User Not Found !' })
+    }
+
+    const newUser = await User.findOneAndUpdate({ GoSipID }, { name }, { new: true })
+
+    return res.json({ user: newUser, success: true })
+})
+
+// Update Profile Pic
+router.post('/updateprofilepic', verifyAuth, upload.single('profilePic'), async (req, res) => {
+    try {
+
+        const newUser = await User.findOneAndUpdate({ GoSipID: req.user.GoSipID }, { profilePic: req.file.path }, { new: true })
+
+        return res.json({ user: newUser, success: true })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Cannot Update Profile Pic ! Server Error !' })
+    }
 })
 
 export default router
