@@ -19,6 +19,8 @@ const UserSchema = new mongoose.Schema({
     password: {type: String},
     profilePic: {type: String, default: "https://res.cloudinary.com/df63mjue3/image/upload/v1742656391/GoSipDefaultProfilePic_ugv59u.jpg"},
     color: {type: String},
+    isOnline: {type: Boolean, default: false},
+    friends: [String],
 })
 
 UserSchema.pre('save', async function (next) {
