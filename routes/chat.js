@@ -30,6 +30,7 @@ router.get('/', verifyAuth, async (req, res) => {
                     name: friend.name,
                     profilePic: friend.profilePic,
                     isOnline: friend.isOnline,
+                    GoSipID: friend.GoSipID,
                 },
                 unreadCount,
             }
