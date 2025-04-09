@@ -280,4 +280,58 @@ router.post('/updateprofilepic', verifyAuth, upload.single('profilePic'), async 
     }
 })
 
+// Get Users For Adding As Friends
+router.get('/getusers', verifyAuth, async (req, res) => {
+    const query = req.query.identifier
+
+    if (!query) {
+        return res.status(400).json({ error: 'Query is required !' })
+    }
+
+    const users = await User.find({ $and: [{ $or: [{ name: { $regex: query, $options: 'i' } }, { GoSipID: { $regex: query, $options: 'i' }}] }, { GoSipID: { $ne: req.user.GoSipID } }] }) // $regex checks if the field contains the query and $options: 'i' make this search case-insensitive
+
+    const usersData = users.map((user) => {
+        return {
+            name: user.name,
+            GoSipID: user.GoSipID,
+            profilePic: user.profilePic,
+            inFriendRequests: user.friendRequests.includes(req.user.GoSipID)
+        }
+    })
+
+    return res.json({ users: usersData })
+})
+
+// Get All The Information of Users In friendRequests array
+router.get('/friendrequests', verifyAuth, async (req, res) => {
+    const user = await User.findOne({ GoSipID: req.user.GoSipID })
+
+    try {
+
+        const users = await Promise.all(user.friendRequests.map(async (GoSipID) => {
+            const user = await User.findOne({ GoSipID })
+    
+            return { name: user.name, GoSipID: user.GoSipID, profilePic: user.profilePic }
+        }))
+    
+        return res.json({ users })
+        
+    } catch (error) {
+        return res.status(500).json({ error: 'Cannot Get Friend Requests ! Server Error !' })
+    }
+})
+
+// Reject Friend Request (Accept Friend Request Is In server.js)
+router.post('/rejectrequest', verifyAuth, async (req, res) => {
+    const { GoSipID } = req.body
+
+    if (!GoSipID) {
+        return res.status(400).json({ error: 'GoSipID is required !' })
+    }
+
+    await User.updateOne({ GoSipID: req.user.GoSipID }, { $pull: { friendRequests: GoSipID } })
+
+    return res.json({ success: true })
+})
+
 export default router

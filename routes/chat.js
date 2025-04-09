@@ -14,6 +14,10 @@ router.get('/', verifyAuth, async (req, res) => {
 
         const chatRooms = await ChatRoom.find({ members: GoSipID }).sort({ updatedAt: -1 })
     
+        if (chatRooms.length === 0) {
+            return res.json([])
+        }
+
         const enrichedData = await Promise.all(chatRooms.map(async (room) => {
             const friendGoSipID = room.members.find(id => id !== GoSipID)
     
@@ -29,7 +33,6 @@ router.get('/', verifyAuth, async (req, res) => {
                 friend: {
                     name: friend.name,
                     profilePic: friend.profilePic,
-                    isOnline: friend.isOnline,
                     GoSipID: friend.GoSipID,
                 },
                 unreadCount,
