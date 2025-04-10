@@ -67,7 +67,7 @@ router.post('/messages', verifyAuth, async (req, res) => {
 
         const friend = await User.findOne({ GoSipID: friendGoSipID })
     
-        const messages = await Message.find({ chatRoomID })
+        const messages = await Message.find({ chatRoomID, deletedFor: { $ne: GoSipID } })
     
         const data = {
             friend: {
@@ -85,6 +85,20 @@ router.post('/messages', verifyAuth, async (req, res) => {
         return res.status(500).json({ error: 'Cannot Fetch Messages ! Server Error !' })
     }
 
+})
+
+// Delete all messages for User
+router.post('/deletemessagesforme', verifyAuth, async (req, res) => {
+    const { chatRoomID } = req.body
+    const { GoSipID } = req.user
+
+    if (!chatRoomID) {
+        return res.status(400).json({ error: 'Chat Room ID is rquired !' })
+    }
+
+    await Message.updateMany({ chatRoomID }, { $addToSet: { deletedFor: GoSipID } })
+
+    return res.json({ success: true })
 })
 
 export default router

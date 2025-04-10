@@ -181,8 +181,6 @@ io.on('connection', (socket) => {
             unreadCount: 0,
         })
 
-        socket.emit()
-
         const receiverSocketId = onlineUsers.get(GoSipID)
 
         if (receiverSocketId) {
@@ -198,7 +196,25 @@ io.on('connection', (socket) => {
 
             io.to(receiverSocketId).emit('userOnline', socket.user.GoSipID)
             
-            socket.emit('userOnline', user.GoSipID)
+            socket.emit('userOnline', friend.GoSipID)
+        }
+    })
+
+    socket.on('removeFriend', async ({ GoSipID, chatRoomID }) => {
+        await User.updateOne({ GoSipID: socket.user.GoSipID }, { $pull: { friends: GoSipID } })
+
+        await User.updateOne({ GoSipID }, { $pull: { friends: socket.user.GoSipID } })
+
+        await ChatRoom.deleteOne({ chatRoomID })
+
+        await Message.deleteMany({ chatRoomID })
+
+        socket.emit('removedFriend', GoSipID)
+
+        const receiverSocketId = onlineUsers.get(GoSipID)
+
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('removedFriend', socket.user.GoSipID)
         }
     })
 
