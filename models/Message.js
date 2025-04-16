@@ -5,7 +5,7 @@ const MessageSchema = new mongoose.Schema({
     senderGoSipID: {type: String, required: true},
     text: {type: String, required: true},
     createdAt: {type: Date, default: Date.now, expires: 86400}, // 24 Hours = 60 * 60 * 24 = 86400 Seconds
-    readBy: [String],
+    readBy: {type: [String], default: []},
     deletedFor: {type: [String], default: []}
 })
 

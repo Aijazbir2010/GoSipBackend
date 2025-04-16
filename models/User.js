@@ -19,8 +19,9 @@ const UserSchema = new mongoose.Schema({
     password: {type: String},
     profilePic: {type: String, default: "https://res.cloudinary.com/df63mjue3/image/upload/v1742656391/GoSipDefaultProfilePic_ugv59u.jpg"},
     color: {type: String},
-    friends: [String],
-    friendRequests: [String],
+    friends: {type: [String], default: []},
+    friendRequests: {type: [String], default: []},
+    unreadNotifications: {type: Number, default: 0}
 })
 
 UserSchema.pre('save', async function (next) {

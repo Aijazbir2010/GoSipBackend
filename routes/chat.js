@@ -41,7 +41,6 @@ router.get('/', verifyAuth, async (req, res) => {
     
         return res.json(enrichedData)
     } catch (error) {
-        console.log(error)
         return res.status(500).json({ error: 'Cannot Fetch Chat Rooms ! Server Error !' })
     }
 })
@@ -67,7 +66,7 @@ router.post('/messages', verifyAuth, async (req, res) => {
 
         const friend = await User.findOne({ GoSipID: friendGoSipID })
     
-        const messages = await Message.find({ chatRoomID, deletedFor: { $ne: GoSipID } })
+        const messages = await Message.find({ chatRoomID, deletedFor: { $nin: [GoSipID] } })
     
         const data = {
             friend: {
@@ -93,7 +92,7 @@ router.post('/deletemessagesforme', verifyAuth, async (req, res) => {
     const { GoSipID } = req.user
 
     if (!chatRoomID) {
-        return res.status(400).json({ error: 'Chat Room ID is rquired !' })
+        return res.status(400).json({ error: 'Chat Room ID is required !' })
     }
 
     await Message.updateMany({ chatRoomID }, { $addToSet: { deletedFor: GoSipID } })

@@ -56,11 +56,11 @@ router.post('/register', async (req, res) => {
         const verificationCode = await VerificationCode.findOne({ email })
     
         if (!verificationCode) {
-            return res.status(401).json({ error: 'Verification Code Expired !' })
+            return res.status(403).json({ error: 'Verification Code Expired !' })
         }
     
         if (code.toUpperCase() !== verificationCode.code) {
-            return res.status().json({ error: 'Invalid Verification Code !' })
+            return res.status(400).json({ error: 'Invalid Verification Code !' })
         }
     
         const existingUser = await User.findOne({ email })
@@ -152,6 +152,12 @@ router.get('/refresh', (req, res) => {
 
     jwt.verify(refreshToken, JWT_REFRESH_SECRET, (error, decoded) => {
         if (error) {
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+            
             return res.status(403).json({ error: 'Invalid Refresh Token !' })
         }
 
@@ -275,7 +281,6 @@ router.post('/updateprofilepic', verifyAuth, upload.single('profilePic'), async 
         return res.json({ user: newUser, success: true })
 
     } catch (error) {
-        console.log(error)
         return res.status(500).json({ error: 'Cannot Update Profile Pic ! Server Error !' })
     }
 })
@@ -332,6 +337,31 @@ router.post('/rejectrequest', verifyAuth, async (req, res) => {
     await User.updateOne({ GoSipID: req.user.GoSipID }, { $pull: { friendRequests: GoSipID } })
 
     return res.json({ success: true })
+})
+
+// Update Unread Notifications Count Of User When Inbox Is Opened
+router.get('/readNotifications', verifyAuth, async (req, res) => {
+    await User.updateOne({ GoSipID: req.user.GoSipID }, { unreadNotifications: 0 })
+
+    return res.json({ success: true })
+})
+
+// Get Information Of All Friends (For Adding In Group)
+router.get('/friends', verifyAuth, async (req, res) => {
+    try {
+        const user = await User.findOne({ GoSipID: req.user.GoSipID })
+
+        const friends = await Promise.all(user.friends.map(async (GoSipID) => {
+            const friend = await User.findOne({ GoSipID })
+
+            return { name: friend.name, GoSipID: friend.GoSipID, profilePic: friend.profilePic }
+        }))
+
+        return res.json({ friends })
+        
+    } catch (error) {
+        return res.status(500).json({ error: 'Cannot get information of friends ! Server Error !' })
+    }
 })
 
 export default router
