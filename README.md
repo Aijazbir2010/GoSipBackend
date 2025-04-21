@@ -22,4 +22,11 @@ GoSip isn’t just about chatting—it’s about staying connected in style. Wit
 - **Framework**: Express
 - **Language**: JavaScript
 
+## Frontend Repository
+
+You can check out the frontend code here:  
+👉 [GoSip Frontend on GitHub](https://github.com/Aijazbir2010/GoSip)
+
+---  
+
 Get ready to chat smarter, faster, and cooler with **GoSip**! 🚀💬
